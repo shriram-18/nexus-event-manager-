@@ -1,0 +1,23 @@
+{
+  "name": "hackathn",
+  "version": "1.0.0",
+  "description": "## 💡 Find your vibe. Find your tribe. Nexus is a modern, hyper-local event manager focused on **intimate micro-events** rather than massive concerts. Designed to combat post-pandemic disconnectedness, it helps people connect based on shared \"vibes\" and interests.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.3.3",
+    "socket.io": "^4.8.3"
+  }
+}

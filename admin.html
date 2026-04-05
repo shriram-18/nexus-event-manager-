@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Nexus</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="css/base.css">
+    <style>
+        .admin-nav { display:flex; justify-content: space-between; align-items:center; padding: 20px; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .admin-content { padding: 30px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px;}
+        .stat-card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .stat-card h3 { color: rgba(255,255,255,0.6); font-size: 14px; margin-bottom: 10px; }
+        .stat-card h2 { font-size: 32px; color: #ffd700; }
+        .tables-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top:20px; }
+        @media(max-width: 800px) { .tables-grid { grid-template-columns: 1fr; } }
+        table { width: 100%; border-collapse: collapse; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); border-radius: 12px; overflow: hidden; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { background: rgba(0,0,0,0.4); color: #ffd700; }
+        .btn-sm { padding: 6px 12px; border-radius: 6px; border:none; cursor: pointer; font-size: 12px; color:#000; font-weight: bold;}
+        .btn-approve { background: #2ecc71; }
+        .btn-reject { background: #e74c3c; color: white;}
+    </style>
+</head>
+<body style="background: radial-gradient(circle at 10% 20%, rgb(90, 92, 106) 0%, rgb(32, 45, 58) 81.3%); color: white; margin:0; font-family: system-ui, sans-serif;">
+    <div class="admin-nav">
+        <h2>🛠️ Nexus Admin Panel</h2>
+        <div>
+            <a href="explore.html" style="color:#ffd700; margin-right: 15px;">Back to App</a>
+            <button onclick="logout()" class="btn-sm" style="background:#fff;">Logout</button>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Total Users</h3><h2 id="st-users">-</h2></div>
+            <div class="stat-card"><h3>Total Events</h3><h2 id="st-events">-</h2></div>
+            <div class="stat-card"><h3>Total Bookings</h3><h2 id="st-bookings">-</h2></div>
+            <div class="stat-card"><h3>Total Revenue</h3><h2 id="st-rev">$-</h2></div>
+        </div>
+
+        <div style="height: 300px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px;">
+            <canvas id="growthChart"></canvas>
+        </div>
+
+        <div class="tables-grid">
+            <div>
+                <h3>Platform Overview</h3>
+                <p>Welcome to the Admin panel. Manage users and overview stats here.</p>
+            </div>
+            <div>
+                <h3>Recent Users</h3>
+                <table>
+                    <thead><tr><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+                    <tbody id="tb-users"><tr><td colspan="3">Loading...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { Store } from './js/store.js';
+
+        window.logout = () => Store.logout();
+
+        async function initAdmin() {
+            await Store.init();
+            if(!Store.state.user || Store.state.user.role !== 'admin') {
+                alert('Unauthorized!');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Fetch Stats
+            const resOpt = { headers: Store.headers };
+            const statRes = await fetch(`${Store.API_URL}/admin/stats`, resOpt);
+            const userRes = await fetch(`${Store.API_URL}/admin/users`, resOpt);
+
+            const stats = await statRes.json();
+            const users = await userRes.json();
+
+            document.getElementById('st-users').innerText = stats.users;
+            document.getElementById('st-events').innerText = stats.events;
+            document.getElementById('st-bookings').innerText = stats.bookings;
+            document.getElementById('st-rev').innerText = '$' + stats.revenue;
+
+            // Render Users
+            let uHTML = '';
+            users.slice(-5).reverse().forEach(u => {
+                uHTML += `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.role}</td></tr>`;
+            });
+            document.getElementById('tb-users').innerHTML = uHTML;
+
+            // Chart
+            const ctx = document.getElementById('growthChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Users', 'Events', 'Bookings'],
+                    datasets: [{
+                        label: 'Platform Totals',
+                        data: [stats.users, stats.events, stats.bookings],
+                        backgroundColor: ['rgba(255, 215, 0, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 99, 132, 0.8)']
+                    }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { labels: { color: 'white' } } }, scales: { y: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } } } }
+            });
+        }
+        initAdmin();
+    </script>
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Events | Nexus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    
+    <style>
+        .explore-layout {
+            padding-top: 100px;
+            padding-bottom: 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .filter-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--glass-bg);
+            padding: 24px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: var(--glass-blur);
+        }
+
+        .search-input {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 30px;
+            width: 100%;
+            max-width: 350px;
+            font-family: var(--font-body);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+        }
+
+        .vibe-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .vibe-chip {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-weight: 500;
+            transition: all var(--transition-fast);
+        }
+
+        .vibe-chip:hover, .vibe-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        #emptyState {
+            display: none;
+            text-align: center;
+            padding: 80px 20px;
+            grid-column: 1 / -1;
+            background: rgba(0,0,0,0.2);
+        }
+
+        #emptyState i {
+            font-size: 3.5rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand">
+                <i class="fa-solid fa-layer-group brand-icon"></i> Nexus
+            </a>
+            <div class="nav-links">
+                <form action="explore.html" method="GET" style="display:flex; align-items:center; position:relative;">
+                    <input type="text" name="q" placeholder="Search events..." style="padding:8px 16px; padding-right: 36px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; width:200px; outline:none;">
+                    <button type="submit" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container explore-layout">
+        <div>
+            <h1 style="font-size: 2.5rem; margin-bottom: 8px;">Explore <span class="text-gradient">Events</span></h1>
+            <p>Find your next local adventure, powered by dynamic real-time filtering.</p>
+        </div>
+
+        <div class="filter-header">
+            <div style="position: relative; width: 100%; max-width: 350px;">
+                <i class="fa-solid fa-search" style="position: absolute; left: 20px; top: 50%; transform: translateY(-50%); color: var(--text-muted);"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search events..." style="padding-left: 48px;">
+            </div>
+            
+            <div class="vibe-filters" id="vibeFilters">
+                <button class="vibe-chip active" data-vibe="All">All Vibes</button>
+                <button class="vibe-chip" data-vibe="Introvert-friendly">Introvert-friendly</button>
+                <button class="vibe-chip" data-vibe="High Energy">High Energy</button>
+                <button class="vibe-chip" data-vibe="Tech">Tech</button>
+                <button class="vibe-chip" data-vibe="Community">Community</button>
+            </div>
+        </div>
+
+        <div class="event-grid" id="exploreEventsList">
+            <!-- Loading State -->
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+        </div>
+        
+        <div id="emptyState" class="glass-pane">
+            <i class="fa-solid fa-ghost"></i>
+            <h3>It's quiet... too quiet.</h3>
+            <p>No events found matching your current vibe.</p>
+            <button class="btn btn-primary" style="margin-top: 24px;" id="clearFiltersBtn">Clear Filters</button>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container footer-content">
+            <p><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Nexus Events.</p>
+        </div>
+    </footer>
+
+    <!-- Use app.js for navbar scroll & mouse move -->
+    <script src="./js/app.js" type="module"></script>
+    
+    <!-- Specific Explore Logic -->
+    <script type="module">
+        import { Store } from './js/store.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Store.init();
+            
+            // Check URL parameters for search string passed from Home page
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQuery = urlParams.get('q') || '';
+            const searchInput = document.getElementById('searchInput');
+            if (initialQuery) {
+                searchInput.value = initialQuery;
+            }
+
+            let currentQuery = initialQuery;
+            let currentVibe = 'All';
+            let userLat = null;
+            let userLon = null;
+
+            const container = document.getElementById('exploreEventsList');
+            const emptyState = document.getElementById('emptyState');
+
+            function render() {
+                const events = Store.searchEvents(currentQuery, currentVibe);
+                container.innerHTML = '';
+                
+                if (events.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                    container.innerHTML = events.map(event => {
+                        const total = event.totalTickets || event.spotsTotal || 20;
+                        const available = event.ticketsAvailable !== undefined ? event.ticketsAvailable : (total - (event.spotsFilled || 0));
+                        const filled = total - available;
+                        const fillPercentage = Math.round((filled / total) * 100);
+                        
+                        const isHighHype = fillPercentage > 85;
+                        const hypeClass = isHighHype ? 'hype-fill high' : 'hype-fill';
+                        const dateObj = new Date(event.date + (event.startTime ? 'T'+event.startTime : ''));
+                        const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + 
+                                        (event.startTime ? ', ' + event.startTime : '');
+
+                        let distanceHtml = '';
+                        // Account for old and new coordinates formats
+                        const lat = event.coordinates?.lat || (Array.isArray(event.coordinates) ? event.coordinates[0] : null);
+                        const lng = event.coordinates?.lng || (Array.isArray(event.coordinates) ? event.coordinates[1] : null);
+                        if (userLat && userLon && lat && lng) {
+                            const R = 3958.8; // Miles
+                            const dLat = (lat - userLat) * Math.PI / 180;
+                            const dLon = (lng - userLon) * Math.PI / 180;
+                            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                Math.cos(userLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
+                                Math.sin(dLon/2) * Math.sin(dLon/2);
+                            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                            const d = R * c;
+                            distanceHtml = `<div class="meta-item"><i class="fa-solid fa-route meta-icon" style="color:var(--accent);"></i><span style="color:var(--accent);">${d.toFixed(1)} miles away</span></div>`;
+                        }
+
+                        const displayTags = event.tags || event.vibes || [];
+
+                        return `
+                        <article class="glass-pane event-card" onmousemove="window.handleMouseMove(event, this)">
+                            <div class="card-image-wrap">
+                                <div class="card-badges">
+                                    <span class="badge" style="border-color:var(--primary); color:white; background:rgba(59,130,246,0.6);">${event.category || 'Other'}</span>
+                                    ${displayTags.slice(0,2).map(v => `<span class="badge">${v}</span>`).join('')}
+                                </div>
+                                <img src="${event.image}" alt="${event.title}" class="card-image" loading="lazy">
+                            </div>
+                            <div class="card-content">
+                                <h3 class="card-title">${event.title}</h3>
+                                <div class="card-meta">
+                                    <div class="meta-item"><i class="fa-regular fa-calendar meta-icon"></i><span>${dateStr}</span></div>
+                                    <div class="meta-item"><i class="fa-solid fa-location-dot meta-icon"></i><span>${event.venue || event.location || 'TBA'}</span></div>
+                                    ${distanceHtml}
+                                </div>
+                                <div class="hype-meter-container">
+                                    <div class="hype-label"><span>Hype Meter</span><span>${fillPercentage}% Booked</span></div>
+                                    <div class="hype-track"><div class="${hypeClass}" style="width: ${fillPercentage}%"></div></div>
+                                </div>
+                                <a href="event-details?id=${event.id}" class="btn btn-outline" style="width:100%; justify-content:center;">Explore Vibe</a>
+                            </div>
+                        </article>
+                        `;
+                    }).join('');
+                }
+            }
+
+            // Initial Render
+            render();
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    render(); // Re-render with distances
+                });
+            }
+
+            // Setup Search Listener
+            searchInput.addEventListener('input', (e) => {
+                currentQuery = e.target.value;
+                render();
+            });
+
+            // Setup Filter Chips
+            document.querySelectorAll('.vibe-chip').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.vibe-chip').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentVibe = e.target.dataset.vibe;
+                    render();
+                });
+            });
+
+            // Setup Clear Buttons
+            document.getElementById('clearFiltersBtn').addEventListener('click', () => {
+                searchInput.value = '';
+                currentQuery = '';
+                document.querySelector('[data-vibe="All"]').click();
+            });
+        });
+    </script>
+</body>
+</html>

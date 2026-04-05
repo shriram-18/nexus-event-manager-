@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nexus | Find Your Vibe, Find Your Tribe</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for easy icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+    
+    <style>
+        /* Home Specific Styles */
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding-top: 80px; /* Offset for navbar */
+            position: relative;
+        }
+        
+        /* Hero background glow */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 8vw, 5.5rem);
+            margin-bottom: 24px;
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            font-size: clamp(1.1rem, 3vw, 1.4rem);
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            max-width: 600px;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .featured-section {
+            padding: 80px 0;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 40px;
+        }
+        
+        /* Search Bar Mini */
+        .search-bar {
+            display: flex;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 8px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            backdrop-filter: var(--glass-blur);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: border-color var(--transition-fast);
+        }
+
+        .search-bar:focus-within {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15);
+        }
+        
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            width: 100%;
+            font-family: var(--font-body);
+            font-size: 1.05rem;
+            outline: none;
+        }
+        
+        .search-bar input::placeholder {
+            color: rgba(255,255,255,0.3);
+        }
+
+        .search-bar .btn {
+            border-radius: 40px;
+            padding: 12px 32px;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand">
+                <i class="fa-solid fa-layer-group brand-icon"></i> Nexus
+            </a>
+            <div class="nav-links">
+                <form action="explore.html" method="GET" style="display:flex; align-items:center; position:relative;">
+                    <input type="text" name="q" placeholder="Search events..." style="padding:8px 16px; padding-right: 36px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; width:200px; outline:none;">
+                    <button type="submit" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero" style="min-height: 85vh; display: flex; align-items: center; justify-content: center; text-align: center; padding-top: 80px; position: relative;">
+            <!-- Hero background glow -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 800px; height: 800px; background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%); z-index: 0; pointer-events: none;"></div>
+            
+            <div class="container hero-content" style="position: relative; z-index: 1; max-width: 800px; display: flex; flex-direction: column; align-items: center;">
+                <div class="glass-pane badge" style="display:inline-block; margin-bottom:24px; border-color:var(--primary); color:var(--primary); background:rgba(59,130,246,0.1); font-size:0.85rem; text-transform:none; letter-spacing:0; padding: 6px 16px;">
+                    <i class="fa-solid fa-ticket" style="margin-right: 6px;"></i> The Ultimate Local Experience
+                </div>
+                
+                <h1 style="font-size: clamp(3rem, 8vw, 5.5rem); margin-bottom: 24px; letter-spacing: -2px; line-height: 1.1;">Elevate Your <span class="text-gradient">Weekends</span>.</h1>
+                
+                <p style="font-size: clamp(1.1rem, 3vw, 1.4rem); color: var(--text-muted); margin-bottom: 40px; max-width: 600px;">
+                    Join thousands of people discovering exclusive, community-driven micro-events in your city. Stop scrolling, start experiencing.
+                </p>
+                
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                    <a href="explore.html" class="btn btn-primary" style="padding: 16px 36px; font-size: 1.15rem; border-radius: 16px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);">
+                        <i class="fa-solid fa-compass" style="margin-right: 8px;"></i> Explore All Events
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container footer-content">
+            <p><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Nexus Events. Built for the Hackathon.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="./js/app.js" type="module"></script>
+</body>
+</html>

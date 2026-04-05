@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details | Nexus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+
+    <style>
+        .event-layout { padding-top: 100px; padding-bottom: 80px; display: grid; grid-template-columns: 1fr 380px; gap: 40px; align-items: start; max-width: 1200px; }
+        @media (max-width: 900px) { .event-layout { grid-template-columns: 1fr; } }
+        .event-hero { width: 100%; height: 400px; object-fit: cover; border-radius: 24px; margin-bottom: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .register-widget { padding: 32px; position: sticky; top: 100px; border: 1px solid var(--glass-border); border-radius: 24px; }
+        .price-tag { font-family: var(--font-heading); font-size: 3rem; font-weight: 700; color: white; display: flex; align-items: flex-start; justify-content: center; line-height: 1; }
+        .map-container { height: 250px; width: 100%; border-radius: 16px; margin-bottom: 16px; margin-top: 32px; border: 1px solid rgba(255,255,255,0.1); background: #0b0f19; }
+        
+        .side-panel-item { display: flex; justify-content: space-between; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .side-panel-item:last-child { border-bottom: none; }
+        .side-panel-label { color: var(--text-muted); }
+        .side-panel-value { font-weight: 500; text-align: right; }
+        
+        .event-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .meta-card { display: flex; align-items: center; gap: 16px; }
+        .meta-icon { width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+
+        .payment-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s ease;
+        }
+
+        .payment-modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .payment-modal-content {
+            padding: 40px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            transform: translateY(20px);
+            transition: 0.3s ease;
+        }
+
+        .payment-modal.show .payment-modal-content {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand"><i class="fa-solid fa-layer-group brand-icon"></i> Nexus</a>
+            <div class="nav-links">
+                <form action="explore.html" method="GET" style="display:flex; align-items:center; position:relative;">
+                    <input type="text" name="q" placeholder="Search events..." style="padding:8px 16px; padding-right: 36px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; width:200px; outline:none;">
+                    <button type="submit" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container" id="eventContent">
+        <!-- Injected via JS -->
+    </main>
+
+    <!-- Payment Modal Overlay -->
+    <div id="paymentModal" class="payment-modal">
+        <div class="glass-pane payment-modal-content">
+            <h2 style="margin-bottom: 8px;">Scan to Complete Booking</h2>
+            <p style="color:var(--text-muted); margin-bottom: 24px;">Event: <span id="payEventTitle" style="color:white; font-weight:600;"></span></p>
+            
+            <div style="background: white; padding: 16px; border-radius: 16px; display: inline-block; margin-bottom: 24px;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=nexus@ybl&pn=NexusEvents&am=0&cu=USD" alt="Payment QR" style="display:block;">
+            </div>
+
+            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent); margin-bottom: 32px;" id="payAmountText">
+                $0.00
+            </div>
+
+            <div style="display:flex; gap:16px;">
+                <button class="btn btn-outline" id="closePaymentBtn" style="flex:1; justify-content:center;">Cancel</button>
+                <button class="btn btn-primary" id="confirmPaymentBtn" style="flex:1; justify-content:center;"><i class="fa-solid fa-check"></i> I have paid</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container footer-content">
+            <p><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Nexus Events.</p>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="./js/app.js" type="module"></script>
+    <script type="module">
+        import { Store } from './js/store.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const eventId = urlParams.get('id');
+            const container = document.getElementById('eventContent');
+
+            if (!eventId) {
+                showError(container); return;
+            }
+
+            await Store.init();
+
+            let mapInstance = null;
+            let userLat = null;
+            let userLon = null;
+
+            async function renderEvent(event) {
+                if(!event) {
+                    showError(container);
+                    return;
+                }
+
+                const displayTags = event.tags || event.vibes || [];
+                const total = event.totalTickets || event.spotsTotal || 20;
+                const available = event.ticketsAvailable !== undefined ? event.ticketsAvailable : (total - (event.spotsFilled || 0));
+                const filled = total - available;
+                const fillPercentage = Math.round((filled / total) * 100);
+
+                const dateObj = new Date(event.date + (event.startTime ? 'T'+event.startTime : ''));
+                const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+                const timeStr = event.startTime ? `${event.startTime} - ${event.endTime}` : dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+                const isSoldOut = available <= 0;
+                const hasTicket = Store.state.user ? Store.state.myTickets.some(t => t.eventId === event.id) : false;
+
+                let formatPrice = event.price === 0 ? 'Free' : `<span style="font-size:1.5rem; margin-top:6px; margin-right:4px;">$</span>${event.price}`;
+                
+                let quantitySelectorHtml = '';
+                if (!hasTicket && !isSoldOut) {
+                    quantitySelectorHtml = `
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid var(--glass-border);">
+                            <span style="font-weight: 500;">Tickets</span>
+                            <input type="number" id="ticketQty" value="1" min="1" max="${available}" style="width: 70px; padding: 6px; border-radius: 6px; border: 1px solid var(--glass-border); background: var(--bg-color-light); color: white; text-align: center; outline: none; font-family: var(--font-heading);">
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                <div class="event-layout">
+                    <div class="event-main">
+                        <div class="glass-pane event-header" style="padding: 24px; margin-bottom: 24px; border-radius: 24px;">
+                            <div class="badge" style="display:inline-block; margin-bottom: 16px;">${event.category || 'Event'}</div>
+                            <h1 style="font-size: clamp(2rem, 5vw, 3.5rem); margin-bottom: 24px; line-height: 1.1; letter-spacing: -1px;">${event.title}</h1>
+                            
+                            <div class="event-meta-grid">
+                                <div class="meta-card">
+                                    <div class="meta-icon"><i class="fa-regular fa-calendar"></i></div>
+                                    <div>
+                                        <div style="font-weight: 500; font-size:1.1rem;">${dateStr}</div>
+                                        <div style="color: var(--text-muted); font-size: 0.95rem;">${timeStr}</div>
+                                    </div>
+                                </div>
+                                <div class="meta-card">
+                                    <div class="meta-icon"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div>
+                                        <div style="font-weight: 500; font-size:1.1rem;">${event.venue || event.location || 'TBA'}</div>
+                                        <div style="color: var(--text-muted); font-size: 0.95rem;">${event.address || ''}</div>
+                                    </div>
+                                </div>
+                                <div class="meta-card">
+                                    <div class="meta-icon"><i class="fa-solid fa-ticket"></i></div>
+                                    <div>
+                                        <div style="font-weight: 500; font-size:1.1rem;">${event.price === 0 ? 'Free Entry' : '$' + event.price}</div>
+                                        <div style="color: var(--text-muted); font-size: 0.95rem;">${available} tickets left</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; flex-wrap:wrap; gap:12px; margin-bottom: 32px;">
+                            ${displayTags.map(v => `<span class="badge" style="background: rgba(255,255,255,0.05);">${v}</span>`).join('')}
+                        </div>
+
+                        <img src="${event.image}" alt="${event.title}" class="event-hero">
+
+                        <div style="margin-bottom: 40px;">
+                            <h3 style="margin-bottom: 16px; font-size: 1.5rem;">The Vibe</h3>
+                            <p style="font-size: 1.15rem; line-height: 1.8; color: var(--text-main); font-weight: 300;">${event.description}</p>
+                        </div>
+                        
+                        <div style="margin-bottom: 40px;">
+                            <h3 style="margin-bottom: 16px; font-size: 1.5rem;">Location & Routing</h3>
+                            <div id="distanceDisplay" style="color:var(--accent); font-weight: 500; margin-bottom: 12px; display:none;"><i class="fa-solid fa-route" style="margin-right: 6px;"></i><span id="distVal">...</span> away from you</div>
+                            <div id="map" class="map-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="event-sidebar">
+                        <div class="glass-pane register-widget">
+                            <div style="text-align:center;">
+                                <div class="price-tag">${formatPrice}</div>
+                                <p style="color:var(--text-muted); margin-top:8px; margin-bottom:24px;">Only ${available} tickets remaining!</p>
+                            </div>
+                            
+                            ${quantitySelectorHtml}
+
+                            <div style="display:flex; justify-content:space-between; margin-bottom: 24px; font-size: 1.2rem; font-weight: 600;">
+                                <span>Total:</span>
+                                <span id="totalDisplay">${formatPrice}</span>
+                            </div>
+
+                            <button id="bookBtn" class="btn btn-primary" style="width: 100%; padding: 18px; font-size: 1.1rem; border-radius: 12px;">
+                                ${hasTicket ? '<i class="fa-solid fa-check"></i> Ticket Secured' : (isSoldOut ? 'Event Sold Out' : 'Get Tickets Now')}
+                            </button>
+
+                            <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+                                <h4 style="margin-bottom: 16px; font-size: 1.1rem;">Details</h4>
+                                <div class="side-panel-item">
+                                    <span class="side-panel-label">Host</span>
+                                    <span class="side-panel-value">${event.host || 'Unknown'}</span>
+                                </div>
+                                <div class="side-panel-item">
+                                    <span class="side-panel-label">Capacity</span>
+                                    <span class="side-panel-value">${total} people</span>
+                                </div>
+                                <div class="side-panel-item">
+                                    <span class="side-panel-label">Status</span>
+                                    <span class="side-panel-value" style="color: ${event.status === 'approved' ? 'var(--success)' : 'var(--warning)'}; text-transform: capitalize;">${event.status || 'Active'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+
+                // Calculate total dynamically
+                const qtyInput = document.getElementById('ticketQty');
+                const totalDisplay = document.getElementById('totalDisplay');
+                const bookBtn = document.getElementById('bookBtn');
+
+                if (qtyInput && totalDisplay) {
+                    qtyInput.addEventListener('input', (e) => {
+                        let qty = parseInt(e.target.value) || 1;
+                        if(qty > available) { qty = available; e.target.value = qty; }
+                        if(qty < 1) { qty = 1; e.target.value = 1; }
+                        totalDisplay.innerHTML = event.price === 0 ? 'Free' : `<span style="font-size:1.1rem;">$</span>${(event.price * qty).toFixed(2)}`;
+                    });
+                }
+
+                if (bookBtn && !hasTicket && !isSoldOut) {
+                    if (event.status === 'pending') {
+                         bookBtn.disabled = true;
+                         bookBtn.style.opacity = '0.5';
+                         bookBtn.innerHTML = 'Pending Admin Approval';
+                    } else {
+                        bookBtn.addEventListener('click', async () => {
+                            if (!Store.state.user) {
+                                Toastify({ text: "Please login first to book tickets.", duration: 3000, style: { background: "#ef4444" } }).showToast();
+                                setTimeout(() => window.location.href = 'login.html', 1500);
+                                return;
+                            }
+
+                            const qty = qtyInput ? parseInt(qtyInput.value) : 1;
+                            const totalPrice = (event.price * qty).toFixed(2);
+                            
+                            // 1. Show Payment Modal
+                            const modal = document.getElementById('paymentModal');
+                            document.getElementById('payAmountText').innerText = event.price === 0 ? 'Free Entry' : '$' + totalPrice;
+                            document.getElementById('payEventTitle').innerText = event.title;
+                            modal.classList.add('show');
+
+                            // Allow closing
+                            document.getElementById('closePaymentBtn').onclick = () => modal.classList.remove('show');
+
+                            // 2. Mock Payment Confirmation Logic
+                            document.getElementById('confirmPaymentBtn').onclick = async () => {
+                                modal.classList.remove('show');
+                                bookBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing Blockchain Payment...';
+                                bookBtn.disabled = true;
+
+                                const res = await Store.bookTicket(event.id, qty);
+                                
+                                if (res.success) {
+                                    Toastify({
+                                        text: "🎉 Payment Confirmed! Ticket Booked.",
+                                        duration: 3000,
+                                        gravity: "top", 
+                                        position: "center",
+                                        style: { background: "linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9))", borderRadius: "12px", backdropFilter: "blur(10px)" }
+                                    }).showToast();
+                                    
+                                    bookBtn.outerHTML = `<a href="dashboard.html" class="btn btn-outline" style="width:100%; border-color:var(--accent); color:var(--accent);"><i class="fa-solid fa-check"></i> View Ticket</a>`;
+                                    if(qtyInput) qtyInput.parentElement.style.display = 'none';
+                                    
+                                    // Re-render to show updated tickets
+                                    setTimeout(() => window.location.reload(), 2000);
+                                } else {
+                                    bookBtn.innerHTML = 'Get Tickets Now';
+                                    bookBtn.disabled = false;
+                                    Toastify({
+                                        text: "❌ " + res.message,
+                                        duration: 3000,
+                                        gravity: "top", 
+                                        position: "center",
+                                        style: { background: "linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(220, 38, 38, 0.9))", borderRadius: "12px", backdropFilter: "blur(10px)" }
+                                    }).showToast();
+                                }
+                            };
+                        });
+                    }
+                } else if (bookBtn && isSoldOut && !hasTicket) {
+                    bookBtn.disabled = true;
+                    bookBtn.style.opacity = '0.5';
+                }
+
+                // Setup Map
+                const lat = event.coordinates?.lat || (Array.isArray(event.coordinates) ? event.coordinates[0] : null);
+                const lng = event.coordinates?.lng || (Array.isArray(event.coordinates) ? event.coordinates[1] : null);
+
+                if (lat && lng) {
+                    if (mapInstance) mapInstance.remove();
+                    mapInstance = L.map('map').setView([lat, lng], 13);
+                    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+                    const tileUrl = isLight 
+                        ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                        : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+                    
+                    L.tileLayer(tileUrl, {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(mapInstance);
+                    L.marker([lat, lng]).addTo(mapInstance).bindPopup(`<b>${event.venue || event.location}</b><br>${event.address || ''}`).openPopup();
+                } else {
+                    document.getElementById('map').innerHTML = '<div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--text-muted);">No coordinates provided</div>';
+                }
+
+                // If geolocation exists, update distance
+                if (userLat && userLon && lat && lng) {
+                    const R = 3958.8; // Miles
+                    const dLat = (lat - userLat) * Math.PI / 180;
+                    const dLon = (lng - userLon) * Math.PI / 180;
+                    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(userLat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+                    const d = R * c;
+                    const distText = document.getElementById('distVal');
+                    if (distText) {
+                        distText.innerText = d.toFixed(1) + ' miles';
+                        document.getElementById('distanceDisplay').style.display = 'block';
+                    }
+                }
+            }
+
+            // Real-time socket updates for tickets
+            window.addEventListener('nexusEventUpdated', (e) => {
+                const updatedEvent = e.detail;
+                if(updatedEvent.id === eventId) {
+                    renderEvent(updatedEvent);
+                }
+            });
+
+            // Initial fetch
+            try {
+                const singleRes = await fetch(`${Store.API_URL}/events/${eventId}`, { headers: Store.headers });
+                if(singleRes.ok) {
+                    const payload = await singleRes.json();
+                    renderEvent(payload.data || payload);
+                } else {
+                    showError(container);
+                }
+            } catch(e) {
+                showError(container);
+            }
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition((pos) => {
+                    userLat = pos.coords.latitude;
+                    userLon = pos.coords.longitude;
+                    // Trigger re-render to inject distances if needed
+                    fetch(`${Store.API_URL}/events/${eventId}`)
+                        .then(res=>res.json())
+                        .then(payload => renderEvent(payload.data || payload))
+                        .catch(()=>{});
+                });
+            }
+        });
+
+        function showError(container) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const badId = urlParams.get('id') || 'Unknown ID';
+            const fullHref = window.location.href; // diagnostic
+            container.innerHTML = `
+                <div class="glass-pane" style="grid-column: 1/-1; text-align:center; padding: 80px 20px;">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--danger); margin-bottom: 20px;"></i>
+                    <h2>Event Not Found</h2>
+                    <p style="color:var(--text-muted);">The event you are looking for might have been cancelled or removed.<br><br><span style="font-size:0.8rem; opacity:0.6;">(Debug ID: ${badId})</span><br><span style="font-size:0.7rem; opacity:0.4; word-break:break-all;">Full URL: ${fullHref}</span></p>
+                    <a href="explore.html" class="btn btn-primary" style="margin-top:24px;">Back to Explore</a>
+                </div>`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+# Instructions for Claude
+Copy everything below this line and paste it directly into Claude.
+--------------------------------------------------------------------------------
+
+Hello Claude! I am building a full-stack Event Management platform called **Nexus Events**. I am working on the Node.js/Express backend, and I need your help to continue developing it. 
+
+Here is the current architectural context of my backend so you know exactly what is already built:
+
+### Tech Stack:
+- Node.js & Express.js
+- MongoDB & Mongoose (for database modeling)
+- JSON Web Tokens (JWT) & bcryptjs (for Authentication)
+- Socket.io (for real-time notifications when events are approved/booked)
+- Hugging Face Inference API (`@huggingface/inference`) via Mistral/Mixtral models for AI generation.
+
+### Folder Structure & Routing:
+The backend entry point is `server.js`, running on Port 5000. It mounts the following routes:
+- `/api/auth` -> `routes/auth.js` -> `controllers/authController.js` (Login, Register, Role management)
+- `/api/events` -> `routes/events.js` -> `controllers/eventController.js` (CRUD for events)
+- `/api/admin` -> `routes/admin.js` -> `controllers/adminController.js` (Dashboard stats, approving pending events)
+- `/api/ai` -> `routes/ai.js` -> `controllers/aiController.js` (AI auto-generation)
+
+### Current Database Models:
+**1. User (`models/User.js`)**
+- Roles: `admin`, `organizer`, `user`
+- Fields: `name`, `email`, `password` (hashed)
+
+**2. Event (`models/Event.js`) - STRICT SCHEMA**
+- `title`, `description`, `category` (Social, Tech, Music, etc.), `tags` (Array of strings like "Chill", "High Energy")
+- **Time**: `date` (YYYY-MM-DD), `startTime` (HH:mm), `endTime` (HH:mm). Includes a `pre('save')` validation to reject past dates.
+- **Location**: `venue`, `address`, `coordinates: { lat: Number, lng: Number }`
+- **Capacity/Finance**: `price`, `totalTickets`, `ticketsAvailable` (starts equal to totalTickets). 
+- **System**: `image`, `status` (`pending`, `approved`, `rejected`), `createdBy` (ObjectId referencing User model).
+
+### Key Features Already Implemented:
+1. **AI Auto-Fill:** The `aiController` hits Hugging Face's `Mixtral-8x7B` to generate strict JSON containing a 3-sentence description, a suggested category, and 3 tags based purely on an Event Title payload.
+2. **Role-Based Access Control:** Middleware exists to protect routes (e.g. only Admins can approve a `pending` event).
+3. **Ticket Capacity Math:** When tickets are booked, we decrement `ticketsAvailable` rather than incrementing a counter.
+
+### What I need your help with next:
+[ TYPE YOUR REQUEST FOR CLAUDE HERE... e.g. "Create a new route for users to leave reviews on past events", "Add an endpoint to cancel a ticket", "Optimize my Mongoose queries for the explore page"]

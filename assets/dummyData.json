@@ -1,0 +1,62 @@
+[
+  {
+    "id": "e1",
+    "title": "Midnight Indie Coders Meetup",
+    "date": "2026-03-25T23:00:00",
+    "location": "Downtown Caffeine Hub",
+    "coordinates": [40.7128, -74.0060],
+    "category": "Tech",
+    "vibes": ["Introvert-friendly", "Chill", "Code"],
+    "image": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&q=80&w=1000",
+    "host": "Alex D.",
+    "price": 0,
+    "spotsTotal": 30,
+    "spotsFilled": 12,
+    "description": "A late-night coding session for indie hackers and open-source contributors. Bring your laptop and vibe."
+  },
+  {
+    "id": "e2",
+    "title": "Urban Rooftop Garden Cleanup",
+    "date": "2026-03-28T09:00:00",
+    "location": "Skyline Heights Complex",
+    "coordinates": [40.7200, -74.0100],
+    "category": "Community",
+    "vibes": ["High Energy", "Eco", "Social"],
+    "image": "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&q=80&w=1000",
+    "host": "GreenCity Org",
+    "price": 0,
+    "spotsTotal": 50,
+    "spotsFilled": 45,
+    "description": "Join us Sunday morning to revitalize the community rooftop garden. Tools provided!"
+  },
+  {
+    "id": "e3",
+    "title": "Synthwave & Synth Retro Night",
+    "date": "2026-04-02T21:00:00",
+    "location": "The Neon Room",
+    "coordinates": [40.7300, -74.0000],
+    "category": "Music",
+    "vibes": ["High Energy", "Party", "Retro"],
+    "image": "https://images.unsplash.com/photo-1614149162883-504ce4d13909?auto=format&fit=crop&q=80&w=1000",
+    "host": "DJ Pixel",
+    "price": 15,
+    "spotsTotal": 100,
+    "spotsFilled": 98,
+    "description": "Step back into the 80s with pure synthwave vibes and neon lights. Selling out fast!"
+  },
+  {
+    "id": "e4",
+    "title": "Silent Book Club - Central Park",
+    "date": "2026-04-05T15:00:00",
+    "location": "Central Park, Great Lawn",
+    "coordinates": [40.7812, -73.9665],
+    "category": "Social",
+    "vibes": ["Introvert-friendly", "Deep Conversations", "Chill"],
+    "image": "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&q=80&w=1000",
+    "host": "Sarah M.",
+    "price": 0,
+    "spotsTotal": 20,
+    "spotsFilled": 5,
+    "description": "Bring a book, read in silence for an hour, then optionally chat. Zero pressure networking."
+  }
+]

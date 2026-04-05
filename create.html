@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host an Event | Nexus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+
+    <style>
+        .create-layout { padding-top: 100px; padding-bottom: 80px; max-width: 800px; }
+        .form-panel { padding: 40px; }
+        .form-group { margin-bottom: 28px; }
+        .form-label { display: block; margin-bottom: 10px; font-weight: 500; color: var(--text-main); font-family: var(--font-heading); font-size: 1.05rem; }
+        .form-control { width: 100%; padding: 16px 20px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 12px; color: white; font-family: var(--font-body); font-size: 1.05rem; outline: none; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); background: rgba(0,0,0,0.5); }
+        textarea.form-control { min-height: 140px; resize: vertical; }
+        ::-webkit-calendar-picker-indicator { filter: invert(1); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        @media (max-width: 650px) { .form-row { grid-template-columns: 1fr; } }
+        .vibe-checkboxes { display: flex; flex-wrap: wrap; gap: 12px; }
+        .vibe-checkbox-label { display: inline-flex; align-items: center; padding: 10px 20px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); border-radius: 30px; cursor: pointer; user-select: none; font-weight: 500; }
+        .vibe-checkbox-label input { display: none; }
+        .vibe-checkbox-label:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); }
+        .vibe-checkbox-label:has(input:checked) { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand"><i class="fa-solid fa-layer-group brand-icon"></i> Nexus</a>
+            <div class="nav-links">
+                <form action="explore.html" method="GET" style="display:flex; align-items:center; position:relative;">
+                    <input type="text" name="q" placeholder="Search events..." style="padding:8px 16px; padding-right: 36px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; width:200px; outline:none;">
+                    <button type="submit" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container create-layout">
+        <div style="text-align: center; margin-bottom: 48px;">
+            <div class="badge" style="display:inline-block; margin-bottom:16px; border-color:var(--primary); color:var(--primary); background:rgba(59,130,246,0.1);">
+                <i class="fa-solid fa-microphone-lines"></i> Creator Mode
+            </div>
+            <h1 style="font-size: clamp(2.5rem, 6vw, 3.5rem); margin-bottom: 12px; letter-spacing: -1px;">Host an <span class="text-gradient">Event</span></h1>
+            <p style="font-size: 1.15rem; color: var(--text-muted); max-width: 500px; margin: 0 auto;">Plan the perfect micro-experience with AI-powered suggestions.</p>
+        </div>
+
+        <form id="createEventForm" class="glass-pane form-panel" autocomplete="off">
+            <!-- TITLE & AI -->
+            <div class="form-group" style="display:flex; justify-content:space-between; align-items:center;">
+                <label class="form-label" for="title" style="margin:0;">Event Title</label>
+                <button type="button" id="aiBtn" class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; border: 1px solid #ffd700; color: #ffd700;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Auto-Fill</button>
+            </div>
+            <div class="form-group">
+                <input type="text" id="title" class="form-control" placeholder="e.g. Midnight Code & Coffee..." required>
+            </div>
+
+            <!-- DESC -->
+            <div class="form-group">
+                <label class="form-label" for="description">Description</label>
+                <textarea id="description" class="form-control" placeholder="Automatically generated or write your own..." required></textarea>
+            </div>
+            
+            <!-- Category & Capacity -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="category">Category</label>
+                    <select id="category" class="form-control" required style="appearance: auto; background-color: rgba(11, 15, 25, 0.9);">
+                        <option value="Social">Social / Networking</option>
+                        <option value="Tech">Tech / Coding</option>
+                        <option value="Music">Music / Arts</option>
+                        <option value="Community">Community Service</option>
+                        <option value="Sports">Sports / Wellness</option>
+                        <option value="Chill">Chill / Hobby</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">The Vibe (Tags)</label>
+                    <input type="text" id="tags" class="form-control" placeholder="Comma separated (e.g. Introvert-friendly, High Energy)" required>
+                </div>
+            </div>
+
+            <!-- COVER IMAGE -->
+            <div class="form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 12px; border: 1px dashed var(--glass-border);">
+                <label class="form-label" style="display:flex; justify-content:space-between;">
+                    Event Cover Image
+                    <button type="button" id="skipImageBtn" class="btn btn-outline" style="padding: 4px 10px; font-size: 0.8rem;">Skip & Auto-Assign</button>
+                </label>
+                <input type="file" id="coverImage" accept="image/*" class="form-control" style="background: transparent; border:none; padding:10px 0;">
+                <p style="font-size: 0.85rem; color:var(--text-muted); margin:0;">Upload a custom image or click skip to automatically fetch the perfect aesthetic match.</p>
+                <input type="hidden" id="skipImageInput" value="false">
+            </div>
+
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+            <!-- TIME -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="date">Event Date</label>
+                    <input type="date" id="date" class="form-control" required>
+                </div>
+                <div class="form-group" style="display: flex; gap: 10px;">
+                    <div style="flex:1;">
+                        <label class="form-label" for="startTime">Start Time</label>
+                        <input type="time" id="startTime" class="form-control" required>
+                    </div>
+                    <div style="flex:1;">
+                        <label class="form-label" for="endTime">End Time</label>
+                        <input type="time" id="endTime" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOCATION -->
+            <div class="form-group">
+                <label class="form-label" for="venue">Venue Name</label>
+                <input type="text" id="venue" class="form-control" placeholder="e.g. Central Library, The Coffee Bean..." required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="address">Full Address</label>
+                <input type="text" id="address" class="form-control" placeholder="123 Example St, City, State..." required>
+            </div>
+
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+            <!-- TICKETS -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label" for="totalTickets">Total Tickets Available</label>
+                    <input type="number" id="totalTickets" class="form-control" value="50" min="1" max="10000" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="price">Price ($)</label>
+                    <input type="number" id="price" class="form-control" value="0" min="0" placeholder="0 for Free" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 48px; margin-bottom: 0;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 1.15rem; padding: 18px; border-radius: 12px;">
+                    <i class="fa-solid fa-rocket" style="margin-right: 12px;"></i> Publish to Platform
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer>
+        <div class="container footer-content">
+            <p><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Nexus Events.</p>
+        </div>
+    </footer>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="./js/app.js" type="module"></script>
+    <script type="module">
+        import { Store } from './js/store.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Store.init();
+            if(!Store.state.user || (Store.state.user.role !== 'admin' && Store.state.user.role !== 'organizer')) {
+                document.body.innerHTML = `<div style="min-height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; color:white; background:#0b0f19; gap:16px;"><i class="fa-solid fa-lock" style="font-size:3rem; color:#ef4444;"></i><h2>Unauthorized</h2><p style="color:rgba(255,255,255,0.6);">Only administrators and organizers can host events.</p></div>`;
+                setTimeout(() => window.location.href = 'explore.html', 2500);
+                return;
+            }
+
+            // Client Date validation
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            document.getElementById('date').min = `${yyyy}-${mm}-${dd}`;
+
+            // AI MAGIC FILL
+            document.getElementById('aiBtn').addEventListener('click', async () => {
+                const title = document.getElementById('title').value;
+                if(!title) {
+                    Toastify({ text: "⚠️ Type a Title first so AI knows what to generate!", backgroundColor: "#eab308" }).showToast();
+                    return;
+                }
+                
+                document.getElementById('aiBtn').innerText = "Generating Brainstorm...";
+                try {
+                    const aiData = await Store.generateAiDescription(title);
+                    if(aiData.description) document.getElementById('description').value = aiData.description;
+                    if(aiData.category) {
+                        const sel = document.getElementById('category');
+                        for(let i=0; i<sel.options.length; i++) {
+                            if(sel.options[i].text.includes(aiData.category) || sel.options[i].value.includes(aiData.category)) {
+                                sel.selectedIndex = i; break;
+                            }
+                        }
+                    }
+                    if(aiData.tags && Array.isArray(aiData.tags)) document.getElementById('tags').value = aiData.tags.join(', ');
+                } catch(e) {
+                    Toastify({ text: "❌ " + e.message, backgroundColor: "#ef4444" }).showToast();
+                }
+                document.getElementById('aiBtn').innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> AI Auto-Fill';
+            });
+
+            const form = document.getElementById('createEventForm');
+
+            // Skip image logic
+            document.getElementById('skipImageBtn').addEventListener('click', () => {
+                document.getElementById('skipImageInput').value = 'true';
+                document.getElementById('coverImage').value = '';
+                Toastify({ text: "Image Skipped! Will auto-assign.", backgroundColor: "#3b82f6" }).showToast();
+            });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                // Build exactly matching JSON strict schema
+                let tagsRaw = document.getElementById('tags').value;
+                let tags = tagsRaw.split(',').map(s=>s.trim()).filter(s=>s);
+                if(tags.length === 0) tags = ['Chill'];
+                
+                const totalTix = parseInt(document.getElementById('totalTickets').value);
+                const priceNum = parseInt(document.getElementById('price').value) || 0;
+                
+                // Feature 1: Image Processing
+                let finalImageUrl = null;
+                const fileInput = document.getElementById('coverImage');
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    finalImageUrl = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(file);
+                    });
+                } else {
+                    const cat = document.getElementById('category').value;
+                    const defaultImages = {
+                        "Tech": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80",
+                        "Music": "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=1200&q=80",
+                        "Social": "https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=1200&q=80",
+                        "Community": "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1200&q=80",
+                        "Sports": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=1200&q=80",
+                        "Chill": "https://images.unsplash.com/photo-1520095972714-909e91b053c7?auto=format&fit=crop&w=1200&q=80"
+                    };
+                    finalImageUrl = defaultImages[cat] || defaultImages["Chill"];
+                }
+
+                const newEvent = {
+                    title: document.getElementById('title').value,
+                    description: document.getElementById('description').value,
+                    category: document.getElementById('category').value,
+                    tags: tags,
+                    date: document.getElementById('date').value,
+                    startTime: document.getElementById('startTime').value,
+                    endTime: document.getElementById('endTime').value,
+                    venue: document.getElementById('venue').value,
+                    address: document.getElementById('address').value,
+                    coordinates: {
+                        lat: parseFloat((18.5204 + (Math.random()*0.05 - 0.025)).toFixed(4)), 
+                        lng: parseFloat((73.8567 + (Math.random()*0.05 - 0.025)).toFixed(4))
+                    },
+                    price: priceNum,
+                    totalTickets: totalTix,
+                    ticketsAvailable: totalTix, // start with all tickets available
+                    image: finalImageUrl,
+                    coverImage: finalImageUrl
+                };
+
+                const res = await Store.addEvent(newEvent);
+                if(!res.success) {
+                    Toastify({ text: "❌ " + (res.message || 'Database Error!'), duration: 4000, backgroundColor: "#ef4444" }).showToast();
+                    return;
+                }
+
+                Toastify({
+                    text: "🎉 Event Published! Redirecting...",
+                    duration: 2000,
+                    style: { background: "linear-gradient(135deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.9))", borderRadius: "12px", backdropFilter: "blur(10px)" }
+                }).showToast();
+
+                setTimeout(() => {
+                    window.location.href = `event-details?id=${res.event.id}`;
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>

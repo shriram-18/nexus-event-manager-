@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Dashboard | Nexus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-layout { padding-top: 100px; padding-bottom: 60px; min-height: 80vh; }
+        .user-header { display: flex; align-items: center; gap: 24px; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--glass-border); }
+        .user-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); border: 2px solid rgba(255,255,255,0.2); }
+        .tabs { display: flex; gap: 16px; margin-bottom: 32px; border-bottom: 1px solid var(--glass-border); }
+        .tab { padding: 12px 24px; cursor: pointer; color: var(--text-muted); font-family: var(--font-heading); font-weight: 600; border-bottom: 2px solid transparent; transition: all var(--transition-fast); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); background: linear-gradient(to top, rgba(59,130,246,0.1), transparent); }
+        .ticket-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 32px; }
+        .ar-ticket { position: relative; background: linear-gradient(135deg, rgba(30,41,59,0.8), rgba(15,23,42,0.95)); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.15); display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .ar-ticket::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(125deg, transparent 20%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 60%, transparent 80%); background-size: 200% 200%; animation: holoFlow 6s linear infinite; pointer-events: none; mix-blend-mode: overlay; }
+        @keyframes holoFlow { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .ticket-body { padding: 24px; flex: 1; }
+        .ticket-footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-top: 2px dashed rgba(255,255,255,0.15); background: rgba(0,0,0,0.2); }
+        .qr-code { width: 70px; height: 70px; background: white; padding: 3px; border-radius: 8px; }
+        .admin-event-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+        .btn-danger { background: #ef4444; border: 1px solid #ef4444; color: white; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn-danger:hover { background: #dc2626; }
+
+        /* PRINT */
+        @media print {
+            body { background: white !important; color: black !important; }
+            .navbar, .user-header, .tabs, footer, .no-print { display: none !important; }
+            .dashboard-layout { padding: 0 !important; }
+            .ar-ticket { background: white !important; border: 2px solid black !important; box-shadow: none !important; color: black !important; page-break-inside: avoid; break-inside: avoid; }
+            .ar-ticket * { color: black !important; }
+            .ar-ticket::after { display: none !important; }
+            .ticket-footer { border-top: 2px dashed black !important; background: white !important; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand"><i class="fa-solid fa-layer-group brand-icon"></i> Nexus</a>
+            <div class="nav-links" id="navLinks">
+                <form action="explore.html" method="GET" style="display:flex; align-items:center; position:relative;">
+                    <input type="text" name="q" placeholder="Search events..." style="padding:8px 16px; padding-right: 36px; border-radius:20px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.2); color:white; width:200px; outline:none;">
+                    <button type="submit" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted); cursor:pointer;"><i class="fa-solid fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container dashboard-layout">
+        <div class="user-header">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=NexusUser" alt="User" class="user-avatar">
+            <div>
+                <h1 id="welcomeText" style="margin-bottom: 4px; letter-spacing: -1px;">Welcome back!</h1>
+                <p id="roleText" style="margin: 0; color: var(--text-muted);">Manage your tickets and events.</p>
+            </div>
+        </div>
+
+        <div class="tabs" id="tabBar">
+            <div class="tab active" data-target="ticketsTab">My Tickets</div>
+            <div class="tab" data-target="hostingTab" id="adminTab" style="display:none;">Manage Events</div>
+            <div class="tab" data-target="analyticsTab" id="analyticsTabBtn" style="display:none;">Analytics</div>
+        </div>
+
+        <!-- Tickets Tab -->
+        <div id="ticketsTab" class="tab-content" style="display:block;">
+            <div class="ticket-grid" id="ticketList">
+                <p style="color:var(--text-muted);"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading tickets...</p>
+            </div>
+        </div>
+
+        <!-- Admin Events Tab -->
+        <div id="hostingTab" class="tab-content" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2>Platform Events</h2>
+                <a href="create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Host New Event</a>
+            </div>
+            <div id="adminEventsList" class="ticket-grid">
+                <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analyticsTab" class="tab-content" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <h2>Platform Analytics</h2>
+            </div>
+            <div id="analyticsCards" class="ticket-grid">
+                <div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container footer-content">
+            <p><i class="fa-solid fa-layer-group" style="color:var(--primary)"></i> Nexus Events.</p>
+        </div>
+    </footer>
+
+    <script src="./js/app.js" type="module"></script>
+    <script type="module">
+        import { Store } from './js/store.js';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await Store.init();
+
+            if (!Store.state.user) {
+                window.location.href = 'login';
+                return;
+            }
+
+            const user = Store.state.user;
+
+            // Update header
+            document.getElementById('welcomeText').innerText = `Welcome back, ${user.name}!`;
+            document.getElementById('roleText').innerText = user.role === 'admin'
+                ? '👑 Admin — Full platform control.'
+                : 'Manage your digital AR tickets.';
+
+            // Show manage tab if admin or organizer
+            if (user.role === 'admin' || user.role === 'organizer') {
+                document.getElementById('adminTab').style.display = '';
+                if (user.role === 'organizer') {
+                    document.querySelector('#hostingTab h2').innerText = 'My Hosted Events';
+                }
+            }
+            if (user.role === 'admin') {
+                document.getElementById('analyticsTabBtn').style.display = '';
+            }
+
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(tc => tc.style.display = 'none');
+                    e.currentTarget.classList.add('active');
+                    document.getElementById(e.currentTarget.dataset.target).style.display = 'block';
+                });
+            });
+
+            // ── RENDER TICKETS ──────────────────────────────────────
+            const ticketList = document.getElementById('ticketList');
+            const myTickets = Store.state.myTickets;
+
+            if (!myTickets || myTickets.length === 0) {
+                ticketList.innerHTML = `
+                    <div class="glass-pane" style="grid-column:1/-1; padding:60px 40px; text-align:center;">
+                        <i class="fa-solid fa-ticket-simple" style="font-size:3.5rem; color:rgba(255,255,255,0.2); margin-bottom:24px;"></i>
+                        <h3>No tickets yet</h3>
+                        <p style="color:var(--text-muted); margin-bottom:24px;">Explore events and secure your first spot!</p>
+                        <a href="explore" class="btn btn-outline">Explore Events</a>
+                    </div>`;
+            } else {
+                ticketList.innerHTML = myTickets.map(ticket => {
+                    // ticket.eventId may be a populated object or just an id string
+                    const ev = (typeof ticket.eventId === 'object' && ticket.eventId !== null)
+                        ? ticket.eventId
+                        : Store.state.events.find(e => e._id === ticket.eventId || e.id === ticket.eventId);
+
+                    if (!ev) return `
+                        <div class="ar-ticket">
+                            <div class="ticket-body">
+                                <span style="color:var(--text-muted);">Event info unavailable</span>
+                            </div>
+                        </div>`;
+
+                    const evId = ev.id || ev._id;
+                    const eventTitle = ev.title || 'Event';
+                    const venue = ev.venue || ev.location || 'TBA';
+                    const dateStr = ev.date ? new Date(ev.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' }) : '—';
+                    const time = ev.startTime || '';
+                    const qty = ticket.ticketQuantity || ticket.qty || 1;
+                    const qrData = ticket._id || ticket.ticketId || 'NEXUS-TICKET';
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}&bgcolor=ffffff&color=000000`;
+
+                    return `
+                    <div class="ar-ticket">
+                        <div class="ticket-body">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <span style="color:var(--accent); font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:8px;">
+                                        <i class="fa-solid fa-bolt"></i> VIP Access
+                                    </span>
+                                    <h3 style="font-size:1.3rem; margin-bottom:10px; line-height:1.2;">${eventTitle}</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:6px;">
+                                        <i class="fa-solid fa-location-dot" style="color:var(--primary); margin-right:6px;"></i>${venue}
+                                    </p>
+                                    <p style="color:var(--text-muted); font-size:0.9rem;">
+                                        <i class="fa-regular fa-calendar" style="color:var(--primary); margin-right:6px;"></i>${dateStr} ${time ? '@ ' + time : ''}
+                                    </p>
+                                </div>
+                                <button class="btn btn-outline no-print" style="padding:8px 12px; font-size:0.8rem;" onclick="window.print()">
+                                    <i class="fa-solid fa-print"></i>
+                                </button>
+                            </div>
+                            <div style="display:flex; gap:24px; margin-top:16px;">
+                                <div>
+                                    <span style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:3px;">TICKETS</span>
+                                    <span style="font-weight:700;">x${qty}</span>
+                                </div>
+                                <div>
+                                    <span style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:3px;">STATUS</span>
+                                    <span style="font-weight:700; color:#10b981;">Confirmed</span>
+                                </div>
+                                <div>
+                                    <span style="display:block; font-size:0.7rem; color:var(--text-muted); margin-bottom:3px;">PRICE</span>
+                                    <span style="font-weight:700;">${ticket.totalPrice === 0 ? 'Free' : '$' + (ticket.totalPrice || 0)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ticket-footer">
+                            <div>
+                                <span style="display:block; font-size:0.7rem; color:var(--text-muted); letter-spacing:1px; margin-bottom:4px;">TICKET ID</span>
+                                <span style="font-size:0.8rem; font-weight:600; font-family:monospace;">${String(qrData).slice(-12).toUpperCase()}</span>
+                            </div>
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <a href="event-details?id=${evId}" class="no-print" style="font-size:0.8rem; color:var(--primary); text-decoration:underline;">View Event</a>
+                                <img src="${qrUrl}" alt="QR" class="qr-code">
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            // ── MANAGE EVENTS TAB (Admin & Organizer) ──────────────────────────────────────
+            if (user.role === 'admin' || user.role === 'organizer') {
+                const adminList = document.getElementById('adminEventsList');
+                
+                // Fetch managed events
+                const manageRes = await Store.getManagedEvents();
+                const events = manageRes.success ? manageRes.events : [];
+
+                if (!events || events.length === 0) {
+                    adminList.innerHTML = `
+                        <div class="glass-pane" style="grid-column:1/-1; padding:60px 40px; text-align:center;">
+                            <i class="fa-solid fa-calendar-xmark" style="font-size:3rem; color:rgba(255,255,255,0.2); margin-bottom:16px;"></i>
+                            <h3>No Events Yet</h3>
+                            <p style="color:var(--text-muted); margin-bottom:24px;">Create the first event!</p>
+                            <a href="create" class="btn btn-primary">Host First Event</a>
+                        </div>`;
+                } else {
+                    adminList.innerHTML = events.map(ev => {
+                        const evId = ev.id || ev._id;
+                        const available = ev.ticketsAvailable !== undefined ? ev.ticketsAvailable : '?';
+                        const total = ev.totalTickets || '?';
+                        const statusColor = ev.status === 'approved' ? '#10b981' : ev.status === 'rejected' ? '#ef4444' : '#f59e0b';
+                        
+                        let actionButtons = `
+                            <a href="event-details.html?id=${evId}" class="btn btn-outline" style="text-align:center; padding:8px 12px; font-size:0.85rem;">
+                                <i class="fa-solid fa-eye"></i> View
+                            </a>
+                            <button class="btn-danger" style="text-align:center; padding:8px 12px; font-size:0.85rem;" onclick="deleteEvent('${evId}')">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>`;
+                            
+                        if (user.role === 'admin' && ev.status === 'pending') {
+                            actionButtons += `
+                                <button class="btn btn-primary" style="background:#10b981; border:none; padding:8px 12px; font-size:0.85rem;" onclick="approveEvent('${evId}')">
+                                    <i class="fa-solid fa-check"></i> Approve
+                                </button>
+                                <button class="btn btn-primary" style="background:#ef4444; border:none; padding:8px 12px; font-size:0.85rem;" onclick="rejectEvent('${evId}')">
+                                    <i class="fa-solid fa-xmark"></i> Reject
+                                </button>`;
+                        }
+
+                        return `
+                        <div class="glass-pane" style="padding:24px;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                                <div style="flex:1;">
+                                    <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:${statusColor}; display:block; margin-bottom:8px;">
+                                        ${ev.status || 'pending'}
+                                    </span>
+                                    <h3 style="margin-bottom:6px;">${ev.title}</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:6px;">
+                                        <i class="fa-regular fa-calendar" style="margin-right:6px;"></i>${ev.date}
+                                    </p>
+                                    <p style="color:var(--text-muted); font-size:0.9rem;">
+                                        <i class="fa-solid fa-ticket" style="margin-right:6px;"></i>${available} / ${total} tickets left
+                                    </p>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px; min-width:120px;">
+                                    ${actionButtons}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                }
+            }
+
+            // ── ANALYTICS TAB (Admin) ──────────────────────────────────────
+            if (user.role === 'admin') {
+                const analyticsRes = await Store.getAnalytics();
+                const analyticsList = document.getElementById('analyticsCards');
+                if (analyticsRes.success) {
+                    const data = analyticsRes.data;
+                    const popCats = (data.topCategories || []).map(c => c._id).join(', ') || 'N/A';
+                    analyticsList.innerHTML = `
+                        <div class="glass-pane" style="padding:24px; text-align:center;">
+                            <i class="fa-solid fa-users" style="font-size:2rem; color:var(--primary); margin-bottom:12px;"></i>
+                            <h3 style="font-size:2.5rem; margin:0;">${data.totalUsers}</h3>
+                            <p style="color:var(--text-muted); margin:0;">Total Users</p>
+                        </div>
+                        <div class="glass-pane" style="padding:24px; text-align:center;">
+                            <i class="fa-solid fa-ticket" style="font-size:2rem; color:var(--accent); margin-bottom:12px;"></i>
+                            <h3 style="font-size:2.5rem; margin:0;">${data.totalTicketsSold || 0}</h3>
+                            <p style="color:var(--text-muted); margin:0;">Total Tickets Sold</p>
+                        </div>
+                        <div class="glass-pane" style="padding:24px; text-align:center;">
+                            <i class="fa-solid fa-fire" style="font-size:2rem; color:var(--warning); margin-bottom:12px;"></i>
+                            <h3 style="font-size:1.5rem; margin:0; line-height:2.5rem;">${popCats}</h3>
+                            <p style="color:var(--text-muted); margin:0;">Top Categories</p>
+                        </div>
+                        <div class="glass-pane" style="grid-column: 1 / -1; padding:24px; height: 350px;">
+                            <canvas id="dashboardChart"></canvas>
+                        </div>
+                    `;
+
+                    // Initialize Chart
+                    setTimeout(() => {
+                        const ctx = document.getElementById('dashboardChart').getContext('2d');
+                        const catLabels = (data.topCategories || []).map(c => c._id);
+                        const catData = (data.topCategories || []).map(c => c.count);
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: catLabels.length > 0 ? catLabels : ['None'],
+                                datasets: [{
+                                    label: 'Events per Category',
+                                    data: catData.length > 0 ? catData : [0],
+                                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                                    borderColor: 'rgba(59, 130, 246, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: { 
+                                maintainAspectRatio: false, 
+                                plugins: { legend: { labels: { color: 'white' } } },
+                                scales: { 
+                                    y: { ticks: { color: 'white', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.1)' } }, 
+                                    x: { ticks: { color: 'white' }, grid: { color: 'rgba(255,255,255,0.1)' } } 
+                                } 
+                            }
+                        });
+                    }, 100);
+                } else {
+                    analyticsList.innerHTML = `<p style="color:var(--danger)">Failed to load analytics.</p>`;
+                }
+            }
+        });
+
+        // Global delete handler — needs to be on window for onclick to work
+        window.deleteEvent = async (id) => {
+            if (!confirm(`Delete this event? This cannot be undone.`)) return;
+            try {
+                const token = localStorage.getItem('nexus_token');
+                const res = await fetch(`http://localhost:5000/api/events/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                if (res.ok) {
+                    alert('Event deleted successfully.');
+                    window.location.reload();
+                } else {
+                    const j = await res.json();
+                    alert('Failed: ' + (j.error || 'Unknown error'));
+                }
+            } catch(e) {
+                alert('Network error: ' + e.message);
+            }
+        };
+
+        window.approveEvent = async (id) => {
+            const res = await Store.approveEvent(id);
+            if (res.success) {
+                alert('Event approved!');
+                window.location.reload();
+            } else {
+                alert('Failed: ' + (res.message || res.error));
+            }
+        };
+
+        window.rejectEvent = async (id) => {
+            if (!confirm('Are you sure you want to reject this event?')) return;
+            const res = await Store.rejectEvent(id);
+            if (res.success) {
+                alert('Event rejected.');
+                window.location.reload();
+            } else {
+                alert('Failed: ' + (res.message || res.error));
+            }
+        };
+    </script>
+</body>
+</html>
