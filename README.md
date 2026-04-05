@@ -7,7 +7,7 @@
 ![HTML5](https://img.shields.io/badge/HTML5-%23E34F26.svg?style=flat&logo=html5&logoColor=white) 
 ![CSS3](https://img.shields.io/badge/CSS3-%231572B6.svg?style=flat&logo=css3&logoColor=white) 
 
-**Live Demo:** 🌍 [https://nexus-event-manager.onrender.com](https://nexus-event-manager.onrender.com)
+**Live Demo:** 🌍 [https://nexus-event-manager.onrender.com](https://nexus-event-manager-1.onrender.com)
 
 ## 💡 Find your vibe. Find your tribe.
 Nexus is a modern, hyper-local event manager focused on **intimate micro-events** rather than massive concerts. Designed to combat post-pandemic disconnectedness, it helps people connect based on shared "vibes" and interests.
