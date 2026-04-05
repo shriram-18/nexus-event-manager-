@@ -6,7 +6,7 @@ export const Store = {
         user: null // Will hold auth data
     },
     
-    API_URL: 'http://localhost:5000/api',
+    API_URL: '/api',
     socket: null,
 
     // Helper for auth headers
@@ -30,7 +30,7 @@ export const Store = {
         try {
             // Setup Socket.IO if available
             if (window.io) {
-                this.socket = io('http://localhost:5000');
+                this.socket = io();
                 this.socket.on('eventUpdated', (data) => {
                     const ev = this.getEventById(data.id);
                     if (ev) {
