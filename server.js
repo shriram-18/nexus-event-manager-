@@ -61,9 +61,12 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/nexus')
         await seedAdmin(); // So we have an admin account ready to test
         
         const PORT = process.env.PORT || 5000;
-        server.listen(PORT, () => console.log(`🚀 Nexus API running at http://localhost:${PORT}/api`));
+        if (!process.env.VERCEL) {
+            server.listen(PORT, () => console.log(`🚀 Nexus API running at http://localhost:${PORT}/api`));
+        }
     })
     .catch(err => {
         console.error('❌ MongoDB connection failed:', err.message);
-        process.exit(1);
     });
+
+module.exports = app;
